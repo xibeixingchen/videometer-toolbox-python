@@ -132,68 +132,68 @@ class ImageClass:
     """
         
     def __init__(self, path, bandIndexesToUse=[], ifSkipReadingAllLayers=False, ifSkipReadingFreehandLayer=False):
-        """Initializes the class. Called when reading an image.
-        Parameters:
-        -----------
-        path : string
-            Path to the image that will be stored as an object of ImageClass.
-        
-        bandIndexesToUse : Optional argument, give a list or numpy array of band indexes
-        
-        ifSkipReadingAllLayers : Optional argument, If set to True it will skip reading all the Image Layers. 
-                                Makes the reading quicker. Default is False.
-
-        ifSkipReadingFreehandLayer : Optional argument, If set to True it will skip reading all the Freehand Layers. 
-                                Makes the reading quicker. Default is False.
-
-        """
-        
-        if len(bandIndexesToUse) != 0:
-            utils.checkIfbandIndexesToUseIsValid(bandIndexesToUse,self.Bands)
-        
-        VMImageObject= VMImIO.HipsIO.LoadImage(path)
-        self.PixelValues = utils.vmImage2npArray(VMImageObject)
-
-        (self.Height, self.Width, self.Bands) = self.PixelValues.shape
+    """Initializes the class. Called when reading an image.
+    Parameters:
+    -----------
+    path : string
+        Path to the image that will be stored as an object of ImageClass.
     
-        self.Bands = int(VMImageObject.Bands)
-        self.BandNames=np.array([str(bandname) for bandname in VMImageObject.BandNames]) 
-        self.Illumination=utils.illuminationObjects2List(VMImageObject.Illumination)
-        self.WaveLengths=utils.asNumpyArray(VMImageObject.WaveLengths)
-        self.StrobeTimes=utils.asNumpyArray(VMImageObject.StrobeTimes)
-        self.StrobeTimesUniversal = utils.asNumpyArray(VMImageObject.StrobeTimesUniversal)
-        
-        self._BandCompressionModeObject = VMImageObject.BandCompressionMode
-        self._QuantificationParametersObject = VMImageObject.QuantificationParameters
-        self.MmPixel=VMImageObject.MmPixel
-        self.History=VMImageObject.History
-        self.Description=VMImageObject.Description
-        self.ImageFileName=os.path.basename(path)
-        self.FullPathToImage=os.path.abspath(path)
-        self.FreehandLayers=None
-        self.ForegroundPixels=None
-        self.DeadPixels=None
-        self.SaturatedPixels=None
-        self.CorrectedPixels=None
-        self.RGBPixels=None
+    bandIndexesToUse : Optional argument, give a list or numpy array of band indexes
+    
+    ifSkipReadingAllLayers : Optional argument, If set to True it will skip reading all the Image Layers. 
+                            Makes the reading quicker. Default is False.
 
-        self.ExtraData=dict()
-        for i in VMImageObject.ExtraData.Keys:
-            self.ExtraData[i]=VMImageObject.ExtraData[i]
+    ifSkipReadingFreehandLayer : Optional argument, If set to True it will skip reading all the Freehand Layers. 
+                            Makes the reading quicker. Default is False.
+    """
+    
+    VMImageObject = VMImIO.HipsIO.LoadImage(path)
+    self.PixelValues = utils.vmImage2npArray(VMImageObject)
+    
+    (self.Height, self.Width, self.Bands) = self.PixelValues.shape
+    self.Bands = int(VMImageObject.Bands)
+    
+    # Move validation check here, after self.Bands is set
+    if len(bandIndexesToUse) != 0:
+        utils.checkIfbandIndexesToUseIsValid(bandIndexesToUse, self.Bands)
+    
+    self.BandNames = np.array([str(bandname) for bandname in VMImageObject.BandNames]) 
+    self.Illumination = utils.illuminationObjects2List(VMImageObject.Illumination)
+    self.WaveLengths = utils.asNumpyArray(VMImageObject.WaveLengths)
+    self.StrobeTimes = utils.asNumpyArray(VMImageObject.StrobeTimes)
+    self.StrobeTimesUniversal = utils.asNumpyArray(VMImageObject.StrobeTimesUniversal)
+    
+    self._BandCompressionModeObject = VMImageObject.BandCompressionMode
+    self._QuantificationParametersObject = VMImageObject.QuantificationParameters
+    self.MmPixel = VMImageObject.MmPixel
+    self.History = VMImageObject.History
+    self.Description = VMImageObject.Description
+    self.ImageFileName = os.path.basename(path)
+    self.FullPathToImage = os.path.abspath(path)
+    self.FreehandLayers = None
+    self.ForegroundPixels = None
+    self.DeadPixels = None
+    self.SaturatedPixels = None
+    self.CorrectedPixels = None
+    self.RGBPixels = None
+    
+    self.ExtraData = dict()
+    for i in VMImageObject.ExtraData.Keys:
+        self.ExtraData[i] = VMImageObject.ExtraData[i]
+    
+    self.ExtraDataInt = dict()
+    for i in VMImageObject.ExtraDataInt.Keys:
+        self.ExtraDataInt[i] = VMImageObject.ExtraDataInt[i]
+    
+    self.ExtraDataString = dict()
+    for i in VMImageObject.ExtraDataString.Keys:
+        self.ExtraDataString[i] = VMImageObject.ExtraDataString[i]
         
-        self.ExtraDataInt = dict()
-        for i in VMImageObject.ExtraDataInt.Keys:
-            self.ExtraDataInt[i]=VMImageObject.ExtraDataInt[i]
-        
-        self.ExtraDataString = dict()
-        for i in VMImageObject.ExtraDataString.Keys:
-            self.ExtraDataString[i]=VMImageObject.ExtraDataString[i]
-            
-        if not ifSkipReadingAllLayers:
-            self._ReadAllImageLayers(VMImageObject, ifSkipReadingFreehandLayer)
-        
-        if len(bandIndexesToUse) != 0:
-            self.reduceBands(bandIndexesToUse)
+    if not ifSkipReadingAllLayers:
+        self._ReadAllImageLayers(VMImageObject, ifSkipReadingFreehandLayer)
+    
+    if len(bandIndexesToUse) != 0:
+        self.reduceBands(bandIndexesToUse)
             
     
     def _ReadAllImageLayers(self, VMImageObject,ifSkipReadingFreehandLayer):
